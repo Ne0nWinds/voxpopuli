@@ -24,22 +24,11 @@ Scene::Scene()
 {
 	// allocate room for the world
 	grid = (uint*)MALLOC64( GRIDSIZE3 * sizeof( uint ) );
-	memset( grid, 0, GRIDSIZE3 * sizeof( uint ) );
-	// initialize the scene using Perlin noise, parallel over z
-#pragma omp parallel for schedule(dynamic)
-	for (int z = 0; z < 128; z++)
-	{
-		const float fz = (float)z / WORLDSIZE;
-		for (int y = 0; y < WORLDSIZE; y++)
-		{
-			float fx = 0, fy = (float)y / WORLDSIZE;
-			for (int x = 0; x < WORLDSIZE; x++, fx += 1.0f / WORLDSIZE)
-			{
-				const float n = noise3D( fx, fy, fz );
-				Set( x, y, z, n > 0.09f ? 0x020101 * y : 0 );
-			}
-		}
-	}
+	gzFile f = gzopen("assets/viking.bin", "rb");
+	int3 size;
+	gzread(f, &size, sizeof(int3));
+	gzread(f, grid, size.x * size.y * size.z * 4);
+	gzclose(f);
 }
 
 void Scene::Set( const uint x, const uint y, const uint z, const uint v )
